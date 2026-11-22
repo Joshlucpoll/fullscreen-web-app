@@ -1,0 +1,32 @@
+name: Build IPA
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Web app URL
+        required: true
+        default: https://example.com
+      name:
+        description: App name under the Home Screen icon
+        required: true
+        default: Web App
+      bundle_id:
+        description: Bundle ID (optional; derived from the name if empty)
+        required: false
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install xcodegen
+      - run: scripts/build-ipa.sh
+        env: # passed through env, never inlined, so inputs can't inject shell
+          WEB_APP_URL: ${{ inputs.url }}
+          APP_DISPLAY_NAME: ${{ inputs.name }}
+          BUNDLE_ID: ${{ inputs.bundle_id }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WebApp-ipa # artifact names reject some characters, so keep it fixed
+          path: WebApp.ipa
+          if-no-files-found: error
